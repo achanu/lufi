@@ -1,0 +1,29 @@
+#!/bin/sh
+
+addgroup -g ${GID} lufi && adduser -H -s /bin/sh -D -G lufi -u ${UID} lufi
+
+cd ${LUFI_DIR}
+chown -R lufi:lufi .
+
+if [ ! -e "${LUFI_DIR}/lufi.conf" ]; then
+    # Outputting directly to lufi.conf using "sed -i" when mounted with docker fails.
+    echo "$(sed \
+            -e 's|<instance_name>|'${INSTANCE_NAME:-Lufi}'|' \
+            -e 's|<secret>|'${SECRET:-`date +%s | sha256sum | head -c 64`}'|' \
+            -e 's|<contact>|'${CONTACT:-contact@domain.tld}'|' \
+            -e 's|<report>|'${REPORT:-report@domain.tld}'|' \
+            -e 's|<max_file_size>|'${MAX_FILE_SIZE:-104857600}'|' \
+            -e 's|<webroot>|'${WEBROOT:-/}'|' \
+            -e 's|<default_delay>|'${DEFAULT_DELAY:-1}'|' \
+            -e 's|<max_delay>|'${MAX_DELAY:-0}'|' \
+            -e 's|<theme>|'${THEME:-default}'|' \
+            -e 's|<mail_sender>|'${MAIL_SENDER}'|' \
+            -e 's|<mail_how>|'${MAIL_HOW}'|' \
+            -e 's|<mail_howargs>|'${MAIL_HOWARGS}'|' \
+            -e 's|<report>|'${REPORT}'|' \
+            -e 's|<allow_pwd_on_files>|'${ALLOW_PWD_ON_FILES:-1}'|' \
+            -e 's|<policy_when_full>|'${POLICY_WHEN_FULL:-warn}'|' ${LUFI_DIR}/lufi.conf.template
+    )" > ${LUFI_DIR}/lufi.conf
+fi
+
+exec su-exec lufi:lufi /sbin/tini -- /usr/local/bin/carton exec hypnotoad -f /usr/lufi/script/lufi

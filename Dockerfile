@@ -27,8 +27,8 @@ RUN \
     su-exec \
   && \
   echo | cpan && \
-  cpan install CPAN && \
-  cpan reload CPAN && \
+#  cpan install CPAN && \
+#  cpan reload CPAN && \
   cpan install Carton && \
   git clone https://framagit.org/fiat-tux/hat-softwares/lufi.git ${LUFI_DIR} && \
   cd ${LUFI_DIR} && \
